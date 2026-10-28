@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* ------------------------------------------------------------------
+   Providence Manager - charte graphique
+   ------------------------------------------------------------------ */
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Palette fournie */
+    --color-sidebar: #222222;       /* Menu latéral */
+    --color-page: #F4F6F3;          /* Fond général */
+    --color-card: #FFFFFF;          /* Cartes et formulaires */
+    --color-brand: #96C11F;         /* Boutons principaux */
+    --color-on-brand: #222222;      /* Texte sur boutons verts */
+    --color-ink: #222222;           /* Titres et textes principaux */
+    --color-muted: #6B7280;         /* Textes secondaires */
+    --color-soft: #E8EDE1;          /* Boutons secondaires */
+
+    /* Déclinaisons dérivées (survol, bordures, liens lisibles) */
+    --color-brand-hover: #86AD1A;
+    --color-brand-tint: #F0F6DC;
+    --color-soft-hover: #DCE4D0;
+    --color-line: #DDE2D5;
+    --color-link: #5E7D0B;
+
+    --shadow: 0 1px 2px rgb(34 34 34 / 0.05), 0 1px 3px rgb(34 34 34 / 0.04);
+}
+
+@layer base {
+    body { background-color: var(--color-page); color: var(--color-ink); }
+
+    h1, h2, h3, h4 { color: var(--color-ink); }
+
+    input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']),
+    select,
+    textarea {
+        background-color: var(--color-card);
+        color: var(--color-ink);
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    input::placeholder, textarea::placeholder { color: #9CA3AF; }
+
+    input:not([type='checkbox']):not([type='radio']):focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: var(--color-brand);
+        box-shadow: 0 0 0 3px rgb(150 193 31 / 0.25);
+    }
+
+    input[type='checkbox'], input[type='radio'] { accent-color: var(--color-brand); }
+
+    ::selection { background: rgb(150 193 31 / 0.35); }
+}
+
+@layer components {
+    /* Cartes : bordure fine pour un rendu net sur le fond #F4F6F3 */
+    .rounded-xl.bg-card.shadow,
+    .rounded-xl.bg-white.shadow { border: 1px solid var(--color-line); }
+
+    /* Tableaux */
+    table thead th { font-weight: 600; letter-spacing: .03em; }
+    table tbody tr { transition: background-color .12s ease; }
+    table tbody tr:hover { background-color: var(--color-page); }
+
+    /* Boutons : retour visuel homogène */
+    button, a[class*='rounded-lg'][class*='px-4'] { transition: background-color .15s ease, box-shadow .15s ease; }
+    button:focus-visible, a:focus-visible {
+        outline: 2px solid var(--color-brand);
+        outline-offset: 2px;
+    }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+:root {
+    --brand: #A3C108;
+    --brand-hover: #8DA906;
+    --brand-ink: #5C7000;
+    --ink: #181818;
+}
+
+.btn-brand {
+    background: var(--brand);
+    color: var(--ink);
+    font-weight: 600;
+    transition: background-color .15s ease, box-shadow .15s ease;
+}
+
+.btn-brand:hover { background: var(--brand-hover); }
+.btn-brand:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.text-brand-ink { color: var(--brand-ink); }
+
+
+/* ------------------------------------------------------------------
+   Responsive et fluide : téléphone, tablette, ordinateur, grands écrans
+   ------------------------------------------------------------------ */
+html {
+    /* ~14,5 px sur téléphone, ~16 px sur portable, jusqu'à 17 px sur grand écran */
+    font-size: clamp(14.5px, 0.65rem + 0.4vw, 17px);
+    -webkit-text-size-adjust: 100%;
+}
+
+body { overflow-wrap: break-word; }
+
+/* Tableaux : défilement horizontal fluide, largeur minimale lisible */
+.overflow-x-auto { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.overflow-x-auto > table { width: 100%; min-width: max(40rem, 100%); }
+
+@media (max-width: 639.98px) {
+    /* 16 px minimum : évite le zoom automatique d'iOS dans les champs */
+    input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']),
+    select, textarea { font-size: 16px; }
+
+    table th, table td { padding-left: .7rem !important; padding-right: .7rem !important; }
+}
+
+/* Écrans tactiles : cibles de 44 px minimum */
+@media (pointer: coarse) {
+    button, [type='submit'], select,
+    input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']),
+    a[class*='rounded-lg'][class*='px-4'] { min-height: 2.75rem; }
+}
+
+/* Encoches et barres système (iPhone) */
+@supports (padding: max(0px)) {
+    main { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
+}
+
+
+/* ------------------------------------------------------------------
+   Smartphone : chaque ligne de tableau devient une carte (pas de défilement horizontal)
+   Les libellés viennent des en-têtes de colonnes (voir le script du layout).
+   ------------------------------------------------------------------ */
+.rt-v { display: contents; }
+
+@media (max-width: 767.98px) {
+    .overflow-x-auto > table.rt { min-width: 0; }
+    table.rt, table.rt tbody, table.rt tfoot { display: block; width: 100%; }
+    table.rt thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    table.rt tr {
+        display: block; margin: 0 0 .75rem; padding: .35rem .9rem;
+        background: var(--color-card); border: 1px solid var(--color-line) !important;
+        border-radius: .75rem; box-shadow: var(--shadow);
+    }
+    table.rt tbody tr:hover { background: var(--color-card); }
+
+    table.rt td, table.rt tbody th {
+        display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+        min-width: 0; padding: .6rem 0 !important; text-align: right !important;
+        border: 0 !important; border-bottom: 1px dashed var(--color-line) !important;
+    }
+    table.rt tr > :last-child { border-bottom: 0 !important; }
+
+    table.rt td[data-label]::before, table.rt tbody th[data-label]::before {
+        content: attr(data-label); flex: 0 0 38%; max-width: 45%; text-align: left;
+        font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--color-muted);
+    }
+    table.rt .rt-v { display: block; flex: 1; min-width: 0; text-align: right; }
+
+    table.rt td[colspan], table.rt td:not([data-label]) { justify-content: flex-end; }
+    table.rt td[colspan] .rt-v { text-align: left; }
+    table.rt td:not([data-label]) .rt-v { flex: 0 1 auto; }
+    table.rt td .rt-v:empty { display: none; }
+
+    table.rt td input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+    table.rt td select, table.rt td textarea { width: 100% !important; max-width: none !important; text-align: left; }
+}

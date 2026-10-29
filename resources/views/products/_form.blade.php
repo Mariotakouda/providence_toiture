@@ -74,6 +74,8 @@
               class="mt-1 w-full rounded-lg border border-line px-3 py-2">{{ old('description', $product?->description) }}</textarea>
     @error('description') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
 </div>
+    @include('partials.image-field', ['current' => $product?->image, 'label' => 'Photo du produit (affichée dans la galerie de la gamme)'])
+
 
 <div class="mt-4">
     <input type="hidden" name="is_active" value="0">

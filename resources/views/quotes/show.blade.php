@@ -25,6 +25,17 @@
     @endcan
 @endif
 
+            @php
+                $waQuote = \App\Support\WhatsApp::link(
+                    $quote->customer?->phone,
+                    "Bonjour {$quote->customer?->name}, voici votre devis {$quote->quote_number} de ".app(\App\Services\SettingService::class)->get('company_name', 'Providence Toiture').". Je vous l'envoie en PDF juste après ce message. N'hésitez pas si vous avez des questions."
+                );
+            @endphp
+            @if ($waQuote)
+                <a href="{{ $waQuote }}" target="_blank" rel="noopener"
+                   class="rounded-lg bg-[#25D366] px-4 py-2 text-sm font-semibold text-[#06361b] hover:brightness-95">Envoyer par WhatsApp</a>
+            @endif
+
             <a href="{{ route('quotes.pdf', $quote) }}" target="_blank"
                class="rounded-lg border border-line bg-white px-4 py-2 text-sm hover:bg-page">Exporter en PDF</a>
 

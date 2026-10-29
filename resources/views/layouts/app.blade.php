@@ -37,10 +37,10 @@
     <aside id="sidebar"
            class="fixed inset-y-0 left-0 z-40 flex w-64 -translate-x-full flex-col bg-sidebar text-slate-200 transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0">
 
-        <div class="shrink-0 px-4 pb-3 pt-5">
-            <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1.5 rounded-xl bg-white px-4 py-3 shadow-sm">
-                <x-logo class="h-14 w-auto max-w-full object-contain"/>
-                <p class="truncate text-xs font-medium text-muted">{{ $companyName }}</p>
+        <div class="shrink-0 px-4 pb-2 pt-4">
+            <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition hover:bg-white/5">
+                <x-logo :light="true" class="h-10 w-auto max-w-full object-contain"/>
+                <p class="truncate text-[0.7rem] font-medium tracking-wide text-slate-400">{{ $companyName }}</p>
             </a>
         </div>
 

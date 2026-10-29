@@ -19,6 +19,7 @@ class SettingService
         'company_city' => '',
         'company_phone' => '',
         'company_email' => '',
+        'company_whatsapp' => '+228 91 61 70 55',
         'company_tax_id' => '',
         'company_logo' => '',
         'currency_code' => 'FCFA',

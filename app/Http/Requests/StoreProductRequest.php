@@ -30,6 +30,8 @@ class StoreProductRequest extends FormRequest
             'purchase_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999999'],
             'sale_price' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
             'min_stock' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'remove_image' => ['nullable', 'boolean'],
             'is_active' => ['required', 'boolean'],
         ];
     }
@@ -51,6 +53,7 @@ class StoreProductRequest extends FormRequest
             'purchase_price' => 'coût d’achat',
             'sale_price' => 'prix de vente',
             'min_stock' => 'seuil d’alerte',
+            'image' => 'photo',
         ];
     }
 }

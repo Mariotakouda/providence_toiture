@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -104,7 +105,7 @@ class ProductController extends Controller
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
-        $data = $this->prepareData($request->validated(), $request);
+        $data = $this->prepareData($request->validated(), $request, $product);
 
         $product->fill($data);
         $changes = $product->getDirty();
@@ -135,8 +136,22 @@ class ProductController extends Controller
         return back()->with('success', $newStatus ? 'Produit réactivé.' : 'Produit archivé.');
     }
 
-    private function prepareData(array $data, Request $request): array
+    private function prepareData(array $data, Request $request, ?Product $product = null): array
     {
+        unset($data['image'], $data['remove_image']);
+
+        if ($request->hasFile('image')) {
+            if ($product?->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $data['image'] = $request->file('image')->store('products', 'public');
+        } elseif ($product && $request->boolean('remove_image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $data['image'] = null;
+        }
+
         $data['is_active'] = $request->boolean('is_active');
         $data['min_stock'] = $data['min_stock'] ?? 0;
 

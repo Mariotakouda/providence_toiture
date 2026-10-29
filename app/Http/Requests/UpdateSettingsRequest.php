@@ -35,6 +35,7 @@ class UpdateSettingsRequest extends FormRequest
             'company_address' => ['nullable', 'string', 'max:255'],
             'company_city' => ['nullable', 'string', 'max:100'],
             'company_phone' => ['nullable', 'string', 'max:30', Phone::rule()],
+            'company_whatsapp' => ['nullable', 'string', 'max:30', Phone::rule()],
             'company_email' => ['nullable', 'email', 'max:255'],
             'company_tax_id' => ['nullable', 'string', 'max:100'],
             'company_logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:1024'],
@@ -71,6 +72,7 @@ class UpdateSettingsRequest extends FormRequest
         return [
             'company_name' => 'nom de l’entreprise',
             'company_phone' => 'téléphone',
+            'company_whatsapp' => 'numéro WhatsApp',
             'company_email' => 'e-mail',
             'company_logo' => 'logo',
             'currency_code' => 'devise',

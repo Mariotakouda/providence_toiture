@@ -41,6 +41,12 @@
                     @error('company_phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
+                    <label class="block text-sm font-medium" for="company_whatsapp">Numéro WhatsApp</label>
+                    <input id="company_whatsapp" name="company_whatsapp" class="{{ $input }}" value="{{ $v('company_whatsapp') }}" placeholder="+228 90 00 00 00">
+                    <p class="mt-1 text-xs text-muted">Utilisé par le bouton WhatsApp du site. Sans indicatif, +228 est ajouté.</p>
+                    @error('company_whatsapp') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
                     <label class="block text-sm font-medium" for="company_email">E-mail</label>
                     <input id="company_email" name="company_email" type="email" class="{{ $input }}" value="{{ $v('company_email') }}">
                     @error('company_email') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

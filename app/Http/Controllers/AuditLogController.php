@@ -21,7 +21,7 @@ class AuditLogController extends Controller
         $term = trim((string) $request->input('q'));
 
         $logs = AuditLog::query()
-            ->with('user')
+            ->with(['user', 'subject'])
             ->when($term !== '', fn ($q) => $q->where('action', 'like', "%{$term}%"))
             ->when($request->filled('user_id'), fn ($q) => $q->where('user_id', $request->integer('user_id')))
             ->when($request->filled('subject_type'), fn ($q) => $q->where('subject_type', $request->input('subject_type')))
@@ -35,6 +35,7 @@ class AuditLogController extends Controller
             'logs' => $logs,
             'users' => User::orderBy('name')->get(['id', 'name']),
             'subjectTypes' => AuditLog::query()->select('subject_type')->distinct()->orderBy('subject_type')->pluck('subject_type'),
+            'families' => \App\Support\AuditPresenter::FAMILIES,
         ]);
     }
 }

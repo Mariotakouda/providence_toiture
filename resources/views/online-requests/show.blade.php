@@ -28,6 +28,21 @@
             <div><dt class="text-muted">Traitée par</dt><dd>{{ $onlineRequest->assignee?->name ?? '-' }}</dd></div>
         </dl>
 
+        @php
+            $company = app(\App\Services\SettingService::class)->get('company_name', 'Providence Toiture');
+            $waText = $onlineRequest->quote
+                ? "Bonjour {$onlineRequest->name}, c'est {$company}. Votre devis {$onlineRequest->quote->quote_number} (demande {$onlineRequest->reference}) est prêt. Souhaitez-vous que nous vous l'envoyions ici en PDF ?"
+                : "Bonjour {$onlineRequest->name}, c'est {$company}. Nous avons bien reçu votre demande {$onlineRequest->reference}. Nous revenons vers vous très rapidement. Merci de votre confiance.";
+            $waLink = \App\Support\WhatsApp::link($onlineRequest->phone, $waText);
+        @endphp
+        @if ($waLink)
+            <a href="{{ $waLink }}" target="_blank" rel="noopener"
+               class="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-2 text-sm font-semibold text-[#06361b] hover:brightness-95">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a3.5 3.5 0 0 1-1.6-1.6l.8-1-1-2z"/></svg>
+                Répondre sur WhatsApp
+            </a>
+        @endif
+
         @if ($onlineRequest->message)
             <div class="mt-4 rounded-lg bg-soft p-4 text-sm">
                 <p class="mb-1 text-xs uppercase text-muted">Message du client</p>
@@ -122,3 +137,29 @@
                         <p class="text-sm text-muted">Vous n’avez pas le droit de créer des devis.</p>
                     @endcan
                 </div>
+
+                <div class="rounded-xl bg-white p-6 shadow">
+                    <h3 class="mb-3 text-lg font-semibold">Traiter la demande</h3>
+
+                    @if ($onlineRequest->status === \App\Enums\OnlineRequestStatus::New)
+                        <form method="POST" action="{{ route('online-requests.take', $onlineRequest) }}" class="mb-5">
+                            @csrf
+                            <button class="rounded-lg bg-soft px-4 py-2 text-sm font-semibold hover:brightness-95">Prendre en charge</button>
+                            <p class="mt-1 text-xs text-muted">Indique que vous êtes en train de traiter cette demande.</p>
+                        </form>
+                    @endif
+
+                    <form method="POST" action="{{ route('online-requests.close', $onlineRequest) }}"
+                          onsubmit="return confirm('Clôturer cette demande ?')" class="space-y-3 text-sm">
+                        @csrf
+                        <label for="reason" class="block font-medium">Clôturer sans devis (motif obligatoire)</label>
+                        <textarea id="reason" name="reason" rows="3" required minlength="3" maxlength="255"
+                                  class="w-full rounded-lg border border-line px-3 py-2">{{ old('reason') }}</textarea>
+                        @error('reason') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                        <button class="rounded-lg border border-red-300 px-4 py-2 font-semibold text-red-700 hover:bg-red-50">Clôturer la demande</button>
+                    </form>
+                </div>
+            </div>
+        @endcan
+    @endif
+@endsection

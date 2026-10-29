@@ -4,7 +4,6 @@
 
 @section('content')
     <div class="mb-6 flex items-center gap-4 rounded-xl border border-line bg-white p-5 shadow">
-        <x-logo class="h-16 w-auto max-w-[8rem] shrink-0 object-contain"/>
         <div class="min-w-0">
             <p class="text-sm text-muted">Bienvenue,</p>
             <h2 class="truncate text-xl font-semibold text-ink">{{ auth()->user()->name }}</h2>

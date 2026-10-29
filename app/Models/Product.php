@@ -20,6 +20,7 @@ class Product extends Model
         'sku',
         'name',
         'description',
+        'image',
         'unit',
         'purchase_price',
         'sale_price',

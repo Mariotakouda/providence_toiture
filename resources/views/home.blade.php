@@ -4,17 +4,7 @@
     $address = implode(', ', array_filter([$settings->get('company_address'), $settings->get('company_city')]));
     $phone = $settings->get('company_phone');
     $email = $settings->get('company_email');
-
-    // Réseaux sociaux : renseigner ces URL dans les paramètres de l'application.
-    $socialLinks = array_filter([
-        'Facebook'  => $settings->get('company_facebook'),
-        'Instagram' => $settings->get('company_instagram'),
-        'TikTok'    => $settings->get('company_tiktok'),
-        'YouTube'   => $settings->get('company_youtube'),
-        'LinkedIn'  => $settings->get('company_linkedin'),
-        'WhatsApp'  => $settings->get('company_whatsapp'),
-    ], fn ($url) => filled($url));
-
+    $waBase = \App\Support\WhatsApp::link($settings->get('company_whatsapp'));
     $hasContact = $address !== '' || filled($phone) || filled($email);
 
     $gammes = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
@@ -25,12 +15,9 @@
     ];
 
     $services = [
-        ['Devis détaillé', 'Un devis clair, ligne par ligne, établi avec nos équipes et valable pour la durée indiquée.',
-            '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M10 13h6M10 17h6"/>'],
-        ['Livraison suivie', 'Vos commandes sont préparées puis livrées, en une ou plusieurs fois, avec un bon de livraison.',
-            '<path d="M2 6h12v10H2z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/>'],
-        ['Facturation transparente', 'Des factures et des reçus de paiement détaillés pour suivre ce qui est payé et ce qui reste dû.',
-            '<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9v.01M18 15v.01"/>'],
+        ['Devis détaillé', 'Un devis clair, ligne par ligne, établi avec nos équipes et valable pour la durée indiquée.'],
+        ['Livraison suivie', 'Vos commandes sont préparées puis livrées, en une ou plusieurs fois, avec un bon de livraison.'],
+        ['Facturation transparente', 'Des factures et des reçus de paiement détaillés pour suivre ce qui est payé et ce qui reste dû.'],
     ];
 
     $catalogData = ($catalog ?? collect())->map(fn ($c) => [
@@ -42,7 +29,7 @@
         ])->values(),
     ])->values();
 
-    $initialItems = old('items') ? array_values(old('items')) : [];
+    $initialItems = old('items') ? array_values(old('items')) : (request()->integer('produit') ? [['product_id' => request()->integer('produit'), 'quantity' => 1]] : []);
     $requestType = old('type', 'quote');
 @endphp
 <!DOCTYPE html>
@@ -59,9 +46,6 @@
         .btn-brand:hover { background: #8DA906; }
         .btn-brand:focus-visible { outline: 2px solid #181818; outline-offset: 2px; }
         .text-brand-ink { color: #5C7000; }
-
-        /* Les boutons de connexion disparaissent quand le volet est ouvert */
-        body.login-open .login-btn { display: none !important; }
 
         body { font-family: 'Barlow', 'Segoe UI', Arial, sans-serif; }
         h1, h2, h3, .display { font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif; }
@@ -93,84 +77,29 @@
 
         /* Gammes : cartes photo */
         .gammes { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
-        .gamme { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: .75rem; background: #181818; box-shadow: 0 1px 3px rgba(0,0,0,.15); isolation: isolate; }
+        .gamme { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: .75rem; background: #181818; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
         .gamme img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
-        .gamme:focus-visible { outline: 3px solid #A3C108; outline-offset: 3px; }
-        .gamme::before { content: ''; position: absolute; inset: .65rem; z-index: 1; border: 1px solid rgba(255,255,255,.22); border-radius: .45rem; pointer-events: none; opacity: 0; transform: scale(.97); transition: opacity .35s ease, transform .35s ease; }
-        .gamme:hover::before, .gamme:focus-visible::before { opacity: 1; transform: scale(1); }
         .gamme-ph { position: absolute; left: 50%; top: 40%; width: 4rem; height: 4rem; transform: translate(-50%, -50%); opacity: .8; }
         .gamme::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.82) 0%, rgba(0,0,0,.15) 55%, transparent 100%); }
         .gamme-label { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 1rem 1.1rem; color: #fff; }
         .gamme-label strong { display: block; font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif; font-size: 1.5rem; font-weight: 700; text-transform: uppercase; line-height: 1.1; }
         .gamme-label em { display: block; max-height: 0; overflow: hidden; opacity: 0; font-style: normal; font-size: .8rem; color: #A3C108; transition: max-height .35s ease, opacity .35s ease, margin .35s ease; }
         .gamme-label::before { content: ''; display: block; width: 2rem; height: 3px; margin-bottom: .55rem; background: #A3C108; transition: width .35s ease; }
+        @media (max-width: 639.98px) {
+            .gammes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+            .gamme { aspect-ratio: 1 / 1; }
+            .gamme-label { padding: .65rem .7rem; }
+            .gamme-label strong { font-size: 1.05rem; }
+            .gamme-label em { display: none; }
+        }
         .gamme:hover img { transform: scale(1.08); }
         .gamme:hover .gamme-label::before { width: 4rem; }
         .gamme:hover .gamme-label em, .gamme:focus-visible .gamme-label em { max-height: 1.5rem; opacity: 1; margin-top: .3rem; }
 
-        /* Services : un service du devis au paiement */
-        .services {
-            background:
-                radial-gradient(circle at 90% 0%, rgba(163,193,8,.12), transparent 40%),
-                #f7f7f5;
-            border-block: 1px solid #ececea;
-        }
-        .services-eyebrow {
-            display: inline-flex; align-items: center; gap: .6rem;
-            font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
-            font-weight: 700; text-transform: uppercase; letter-spacing: .16em; color: #5C7000;
-        }
-        .services-eyebrow::before { content: ''; width: 2rem; height: 3px; background: #A3C108; }
-
-        .steps { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
-        .step { display: flex; }
-        .step-card {
-            position: relative; overflow: hidden; width: 100%;
-            background: #fff; border: 1px solid #e7e7e4; border-radius: 1rem;
-            padding: 2rem 1.75rem 1.9rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,.05);
-            transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease, border-color .35s ease;
-        }
-        .step-card::before {
-            content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px;
-            background: #A3C108; transform: scaleX(.25); transform-origin: left;
-            transition: transform .45s cubic-bezier(.2,.7,.2,1);
-        }
-        .step-card:hover { transform: translateY(-6px); border-color: #A3C108; box-shadow: 0 18px 40px -14px rgba(0,0,0,.2); }
-        .step-card:hover::before { transform: scaleX(1); }
-
-        .step-num {
-            position: absolute; right: 1.1rem; top: .2rem;
-            font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
-            font-size: 5.5rem; font-weight: 700; line-height: 1;
-            color: rgba(163,193,8,.2); pointer-events: none;
-            transition: color .35s ease;
-        }
-        .step-card:hover .step-num { color: rgba(163,193,8,.4); }
-
-        .step-icon {
-            display: flex; align-items: center; justify-content: center;
-            width: 3.4rem; height: 3.4rem; border-radius: .9rem; background: #181818;
-            transition: transform .35s ease;
-        }
-        .step-icon svg { width: 1.6rem; height: 1.6rem; }
-        .step-card:hover .step-icon { transform: rotate(-6deg) scale(1.06); }
-
-        .step-title {
-            margin-top: 1.4rem; font-size: 1.6rem; font-weight: 700;
-            text-transform: uppercase; line-height: 1.1;
-        }
-        .step-text { margin-top: .6rem; font-size: .95rem; line-height: 1.6; color: #525252; }
-        .step-card:focus-within { border-color: #A3C108; }
-        .step-card::after { content: ''; position: absolute; right: -2.5rem; bottom: -3rem; width: 7rem; height: 7rem; border: 1px solid rgba(163,193,8,.18); border-radius: 50%; pointer-events: none; }
-        .section-intro { max-width: 46rem; }
-        .section-title-mark { width: 3.25rem; height: 4px; margin-top: .8rem; background: #A3C108; }
-        .request-panel { border-top: 4px solid #A3C108; }
-        .social-links { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.25rem; }
-        .social-link { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.5rem; padding: .55rem .8rem; border: 1px solid rgba(255,255,255,.18); border-radius: .5rem; color: #fff; font-size: .8rem; font-weight: 600; transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
-        .social-link:hover { color: #A3C108; border-color: #A3C108; background: rgba(163,193,8,.08); }
-        .social-link svg { width: 1rem; height: 1rem; flex: none; }
-        .footer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+        .wa-float { position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 40; display: inline-flex; align-items: center; gap: .5rem; min-height: 3.25rem; padding: 0 1.1rem; border-radius: 999px; background: #25D366; color: #06361b; font-weight: 600; font-size: .9rem; text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,0,.25); transition: transform .2s ease, box-shadow .2s ease; }
+        .wa-float:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.3); }
+        body.login-open .wa-float { display: none; }
+        @media (max-width: 520px) { .wa-float span { display: none; } .wa-float { width: 3.25rem; padding: 0; justify-content: center; } }
 
         .site-footer { background: #181818; color: #d4d4d4; }
         .site-footer h3 { color: #fff; font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
@@ -182,7 +111,6 @@
             .hero::before, .hero-line, .rise { animation: none; opacity: 1; width: auto; }
             .hero-line { width: 5rem; }
             .js .reveal { opacity: 1; transform: none; transition: none; }
-            .step-card, .step-card::before, .step-icon, .step-num { transition: none; }
         }
 
         .split-panel {
@@ -219,415 +147,6 @@
         @media (prefers-reduced-motion: reduce) {
             .split-panel { transition: none; }
         }
-
-        /* --- Direction artistique premium : section Services --- */
-        .services-premium {
-            position: relative;
-            overflow: hidden;
-            background:
-                radial-gradient(ellipse at 92% 5%, rgba(163,193,8,.13), transparent 31rem),
-                radial-gradient(ellipse at 0% 100%, rgba(163,193,8,.07), transparent 27rem),
-                #f8f9f6;
-        }
-        .services-premium::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(163,193,8,.5), transparent);
-        }
-        .services-heading {
-            display: flex;
-            align-items: end;
-            justify-content: space-between;
-            gap: 2rem;
-            margin-bottom: 2.5rem;
-        }
-        .services-heading-copy { max-width: 49rem; }
-        .services-main-title {
-            margin-top: .55rem;
-            font-size: clamp(2.25rem, 4.2vw, 3.65rem);
-            font-weight: 800;
-            line-height: .98;
-            letter-spacing: -.035em;
-            color: #171b18;
-            text-transform: uppercase;
-        }
-        .services-main-title span { color: #83a000; }
-        .services-lead {
-            margin-top: 1rem;
-            max-width: 43rem;
-            color: #5b625b;
-            font-size: 1.05rem;
-            line-height: 1.75;
-        }
-        .services-side-note {
-            display: flex;
-            align-items: center;
-            gap: .8rem;
-            flex: 0 0 auto;
-            padding: 1rem 1.15rem;
-            border: 1px solid rgba(131,160,0,.18);
-            border-radius: 1rem;
-            background: rgba(255,255,255,.72);
-            box-shadow: 0 10px 30px rgba(25,35,10,.04);
-        }
-        .services-side-icon {
-            display: grid;
-            place-items: center;
-            width: 2.8rem;
-            height: 2.8rem;
-            border-radius: .85rem;
-            background: #eff6d5;
-            color: #729000;
-        }
-        .services-side-icon svg { width: 1.5rem; height: 1.5rem; }
-        .services-side-note strong, .services-side-note small { display: block; }
-        .services-side-note strong { font-size: .85rem; color: #252b22; }
-        .services-side-note small { margin-top: .2rem; font-size: .75rem; color: #73796e; }
-        .steps-premium { gap: 1.35rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .step-premium { min-width: 0; }
-        .step-card-premium {
-            min-height: 20rem;
-            display: flex;
-            flex-direction: column;
-            padding: 1.65rem 1.55rem 1.45rem;
-            border-color: #e8ebe3;
-            border-radius: 1.25rem;
-            box-shadow: 0 8px 24px rgba(24,32,12,.045);
-            isolation: isolate;
-        }
-        .step-card-premium::after {
-            right: -3.3rem;
-            bottom: -3.6rem;
-            width: 9rem;
-            height: 9rem;
-            border: 1.2rem solid rgba(163,193,8,.08);
-            border-radius: 50%;
-            z-index: -1;
-        }
-        .step-card-premium::before { height: 5px; transform: scaleX(.35); }
-        .step-card-premium:hover {
-            transform: translateY(-7px);
-            border-color: rgba(141,169,6,.65);
-            box-shadow: 0 22px 48px -20px rgba(43,57,8,.28);
-        }
-        .step-card-top { display: flex; align-items: center; gap: .8rem; position: relative; min-height: 4.3rem; }
-        .step-icon-premium {
-            width: 3.65rem;
-            height: 3.65rem;
-            border-radius: 1rem;
-            box-shadow: 0 7px 16px rgba(0,0,0,.13);
-        }
-        .step-icon-premium svg { width: 1.8rem; height: 1.8rem; }
-        .step-tag {
-            display: inline-flex;
-            align-items: center;
-            border-radius: 999px;
-            padding: .38rem .7rem;
-            background: #f2f8df;
-            color: #668000;
-            font-size: .68rem;
-            font-weight: 800;
-            letter-spacing: .06em;
-        }
-        .step-num-premium {
-            top: -.35rem;
-            right: -.15rem;
-            font-size: 4.8rem;
-            line-height: 1;
-            color: rgba(163,193,8,.19);
-            z-index: -1;
-        }
-        .step-title-premium {
-            margin-top: 1.45rem;
-            max-width: 17rem;
-            font-size: clamp(1.35rem, 1.8vw, 1.7rem);
-            letter-spacing: -.015em;
-            color: #171b18;
-        }
-        .step-text-premium {
-            margin-top: .65rem;
-            max-width: 24rem;
-            font-size: .94rem;
-            line-height: 1.7;
-            color: #62685f;
-        }
-        .step-link {
-            display: inline-flex;
-            align-items: center;
-            gap: .65rem;
-            align-self: flex-start;
-            margin-top: auto;
-            padding-top: 1.2rem;
-            color: #343b2a;
-            font-size: .85rem;
-            font-weight: 600;
-            text-decoration: none;
-        }
-        .step-link > span:last-child { border-bottom: 1px solid #a3c108; padding-bottom: .2rem; }
-        .step-link-arrow {
-            display: grid;
-            place-items: center;
-            width: 2.2rem;
-            height: 2.2rem;
-            border-radius: 50%;
-            background: #91b300;
-            color: #fff;
-            font-size: 1.35rem;
-            line-height: 1;
-            transition: transform .25s ease, background .25s ease;
-        }
-        .step-link:hover .step-link-arrow { transform: translateX(4px); background: #718d00; }
-        .services-trust {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            margin-top: 2.6rem;
-            padding: 1.35rem 0 0;
-            border-top: 1px solid #e4e8dd;
-        }
-        .trust-item {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            min-width: 0;
-            padding: .35rem 1.1rem;
-            border-right: 1px solid #e3e7df;
-        }
-        .trust-item:first-child { padding-left: 0; }
-        .trust-item:last-child { border-right: 0; }
-        .trust-icon {
-            display: grid;
-            place-items: center;
-            flex: 0 0 auto;
-            width: 3.1rem;
-            height: 3.1rem;
-            border-radius: 50%;
-            background: #eff6dc;
-            color: #83a900;
-        }
-        .trust-icon svg { width: 1.65rem; height: 1.65rem; }
-        .trust-item strong, .trust-item small { display: block; }
-        .trust-item strong { color: #30372a; font-size: .76rem; font-weight: 800; text-transform: uppercase; letter-spacing: .025em; }
-        .trust-item small { margin-top: .28rem; color: #7a8075; font-size: .72rem; line-height: 1.4; }
-        @media (max-width: 900px) {
-            .services-heading { align-items: flex-start; flex-direction: column; gap: 1.25rem; }
-            .steps-premium { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .services-trust { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 1rem; }
-            .trust-item:nth-child(2) { border-right: 0; }
-            .trust-item:nth-child(3) { padding-left: 0; }
-        }
-        @media (max-width: 600px) {
-            .steps-premium { grid-template-columns: 1fr; gap: 1rem; }
-            .step-card-premium { min-height: 0; padding: 1.4rem; }
-            .step-link { margin-top: 1.1rem; padding-top: .2rem; }
-            .services-trust { grid-template-columns: 1fr; gap: .7rem; margin-top: 2rem; }
-            .trust-item, .trust-item:first-child, .trust-item:nth-child(3) { padding: .55rem 0; border-right: 0; }
-            .trust-icon { width: 2.7rem; height: 2.7rem; }
-            .services-main-title { line-height: 1.02; }
-            .services-lead { font-size: .98rem; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .step-link-arrow { transition: none; }
-        }
-
-
-        /* --- Ajustements mobiles : catalogue plus compact et lecture confortable --- */
-        @media (max-width: 640px) {
-            /* Bandeau d'accueil : éviter qu'il occupe tout le premier écran */
-            .hero {
-                min-height: 0;
-                align-items: center;
-            }
-            .hero > div {
-                padding-top: 3.25rem;
-                padding-bottom: 3.25rem;
-            }
-            .hero h1 {
-                font-size: clamp(2.15rem, 9vw, 2.8rem);
-                line-height: 1.04;
-                letter-spacing: -.025em;
-            }
-            .hero p {
-                margin-top: 1rem;
-                font-size: .95rem;
-                line-height: 1.6;
-            }
-            .hero .rise.d4 {
-                margin-top: 1.35rem;
-                align-items: stretch;
-                gap: .65rem;
-            }
-            .hero .rise.d4 a {
-                max-width: 100%;
-                justify-content: center;
-                text-align: center;
-            }
-
-            /* Cartes de gammes : format paysage plutôt que de grandes affiches */
-            #produits {
-                padding-top: 2.5rem;
-                padding-bottom: 2.5rem;
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-            #produits .section-intro h2 {
-                font-size: 2rem;
-                line-height: 1.05;
-            }
-            #produits .gammes {
-                grid-template-columns: minmax(0, 1fr);
-                gap: .85rem;
-                margin-top: 1.25rem;
-            }
-            #produits .gamme {
-                aspect-ratio: 16 / 9;
-                min-height: 0;
-                border-radius: .85rem;
-            }
-            #produits .gamme img {
-                object-position: center;
-            }
-            #produits .gamme::before {
-                inset: .4rem;
-            }
-            #produits .gamme-label {
-                padding: .8rem .9rem;
-            }
-            #produits .gamme-label::before {
-                width: 1.7rem;
-                height: 3px;
-                margin-bottom: .4rem;
-            }
-            #produits .gamme-label strong {
-                font-size: clamp(1.05rem, 4.5vw, 1.3rem);
-                line-height: 1.1;
-            }
-            /* Sur écran tactile, ne pas cacher l'appel à l'action derrière un hover */
-            #produits .gamme-label em {
-                max-height: 1.5rem;
-                margin-top: .25rem;
-                opacity: 1;
-                font-size: .75rem;
-            }
-
-            /* Services : marges et typographie adaptées aux écrans étroits */
-            #services > div {
-                padding-top: 2.75rem;
-                padding-bottom: 2.75rem;
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-            .services-heading {
-                margin-bottom: 1.5rem;
-                gap: 1rem;
-            }
-            .services-main-title {
-                font-size: clamp(2rem, 8.5vw, 2.65rem);
-                line-height: 1.02;
-                letter-spacing: -.025em;
-                overflow-wrap: anywhere;
-            }
-            .services-lead {
-                margin-top: .8rem;
-                font-size: .94rem;
-                line-height: 1.6;
-            }
-            .services-side-note {
-                width: 100%;
-                padding: .8rem;
-                border-radius: .85rem;
-            }
-            .steps-premium {
-                grid-template-columns: minmax(0, 1fr);
-                gap: .85rem;
-            }
-            .step-card-premium {
-                min-height: 0;
-                padding: 1.2rem 1.1rem 1.15rem;
-                border-radius: 1rem;
-            }
-            .step-card-top {
-                min-height: 3.5rem;
-                gap: .6rem;
-            }
-            .step-icon-premium {
-                width: 3rem;
-                height: 3rem;
-                border-radius: .8rem;
-            }
-            .step-icon-premium svg {
-                width: 1.5rem;
-                height: 1.5rem;
-            }
-            .step-num-premium {
-                top: -.25rem;
-                right: 0;
-                font-size: 3.8rem;
-            }
-            .step-title-premium {
-                margin-top: 1rem;
-                font-size: 1.35rem;
-                line-height: 1.12;
-            }
-            .step-text-premium {
-                margin-top: .45rem;
-                font-size: .9rem;
-                line-height: 1.6;
-            }
-            .step-link {
-                margin-top: .8rem;
-                padding-top: .35rem;
-                font-size: .82rem;
-            }
-            .services-trust {
-                margin-top: 1.5rem;
-                gap: .5rem;
-            }
-
-            /* Formulaires : empêcher les champs et boutons de déborder */
-            .cards,
-            .form-grid {
-                grid-template-columns: minmax(0, 1fr);
-            }
-            #demande,
-            #contact {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-            #demande input,
-            #demande select,
-            #demande textarea {
-                min-width: 0;
-                max-width: 100%;
-            }
-            #items > div {
-                align-items: stretch;
-            }
-            #items select {
-                flex-basis: 100%;
-                width: 100%;
-            }
-            #items input[type="number"] {
-                width: 6rem;
-            }
-            .site-footer .grid {
-                gap: 2rem;
-                padding-top: 2.5rem;
-                padding-bottom: 2.5rem;
-            }
-            .footer-bottom {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-        }
-
-        @media (min-width: 420px) and (max-width: 640px) {
-            #produits .gamme-label strong { font-size: 1.35rem; }
-        }
-
     </style>
 </head>
 <body class="h-dvh overflow-hidden bg-white text-[#181818] antialiased {{ $showLogin ? 'login-open' : '' }}">
@@ -650,7 +169,7 @@
                         <a href="#contact" class="hidden text-neutral-600 hover:text-neutral-900 md:inline">Contact</a>
                     @endif
                     <a href="{{ route('login') }}" data-open-login
-                       class="login-btn btn-brand rounded-full px-5 py-2 shadow-sm">Connexion</a>
+                       class="btn-brand rounded-full px-5 py-2 shadow-sm">Connexion</a>
                 </nav>
             </div>
         </header>
@@ -671,7 +190,7 @@
 
                 <div class="rise d4 mt-8 flex flex-wrap items-center gap-3">
                     <a href="{{ route('login') }}" data-open-login
-                       class="login-btn btn-brand inline-flex items-center rounded-full px-6 py-3 text-sm shadow-sm">
+                       class="btn-brand inline-flex items-center rounded-full px-6 py-3 text-sm shadow-sm">
                         Accéder à l’espace professionnel
                     </a>
                     <a href="#produits"
@@ -686,21 +205,18 @@
         </section>
 
         <section id="produits" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
-            <div class="section-intro">
-                <h2 class="text-4xl font-bold uppercase">Nos gammes</h2>
-                <div class="section-title-mark" aria-hidden="true"></div>
-                <p class="mt-3 max-w-xl text-neutral-600">Les produits de couverture et d’étanchéité que nous proposons, sélectionnés pour accompagner vos chantiers.</p>
-            </div>
+            <h2 class="text-4xl font-bold uppercase">Nos gammes</h2>
+            <p class="mt-2 max-w-xl text-neutral-600">Les produits de couverture et d’étanchéité que nous proposons.</p>
 
             <div class="gammes mt-8">
                 @forelse ($gammes as $g)
-                    <a href="#demande" class="gamme">
+                    <a href="{{ route('gammes.show', $g) }}" class="gamme">
                         @if ($g->image)
                             <img src="{{ asset('storage/'.$g->image) }}" alt="{{ $g->name }}" loading="lazy">
                         @else
                             <svg viewBox="0 0 24 24" class="gamme-ph" fill="none" stroke="#A3C108" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15 L12 6 L21 15"/></svg>
                         @endif
-                        <span class="gamme-label"><strong>{{ $g->name }}</strong><em>Demander un devis →</em></span>
+                        <span class="gamme-label"><strong>{{ $g->name }}</strong><em>Voir les produits →</em></span>
                     </a>
                 @empty
                     @foreach ($ranges as $range)
@@ -713,85 +229,41 @@
             </div>
         </section>
 
-        <section id="services" class="services services-premium scroll-mt-20">
-            <div class="mx-auto max-w-6xl px-5 py-16 sm:py-20 lg:py-24">
-                <div class="services-heading">
-                    <div class="services-heading-copy">
-                        <p class="services-eyebrow">Notre engagement</p>
-                        <h2 class="services-main-title">Un service du devis <span>au paiement</span></h2>
-                        <div class="section-title-mark" aria-hidden="true"></div>
-                        <p class="services-lead">
-                            De la première demande jusqu’au règlement, chaque étape est claire et suivie.
-                            Vous gardez une vision simple de votre commande et de son avancement.
-                        </p>
-                    </div>
-                    <div class="services-side-note" aria-label="Notre promesse">
-                        <span class="services-side-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg>
-                        </span>
-                        <span><strong>Votre projet, notre priorité</strong><small>Un suivi clair à chaque étape.</small></span>
-                    </div>
-                </div>
+        <section id="services" class="scroll-mt-20 border-y border-neutral-100 bg-neutral-50">
+            <div class="mx-auto max-w-6xl px-5 py-16">
+                <h2 class="text-2xl font-bold">Un service du devis au paiement</h2>
 
-                <div class="steps steps-premium">
+                <div class="cards mt-8">
                     @foreach ($services as $i => $service)
-                        <article class="step step-premium">
-                            <div class="step-card step-card-premium">
-                                <div class="step-card-top">
-                                    <span class="step-icon step-icon-premium">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="#A3C108" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{!! $service[2] !!}</svg>
-                                    </span>
-                                    <span class="step-tag">ÉTAPE 0{{ $i + 1 }}</span>
-                                    <span class="step-num step-num-premium" aria-hidden="true">0{{ $i + 1 }}</span>
-                                </div>
-                                <h3 class="step-title step-title-premium">{{ $service[0] }}</h3>
-                                <p class="step-text step-text-premium">{{ $service[1] }}</p>
-                                <a href="#demande" class="step-link">
-                                    <span class="step-link-arrow" aria-hidden="true">→</span>
-                                    <span>En savoir plus</span>
-                                </a>
-                            </div>
-                        </article>
+                        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
+                            <span class="btn-brand flex h-9 w-9 items-center justify-center rounded-full text-sm">{{ $i + 1 }}</span>
+                            <h3 class="mt-4 font-semibold">{{ $service[0] }}</h3>
+                            <p class="mt-2 text-sm text-neutral-600">{{ $service[1] }}</p>
+                        </div>
                     @endforeach
-                </div>
-
-                <div class="services-trust" aria-label="Nos engagements">
-                    <div class="trust-item">
-                        <span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 22 2-1c4-2 7-6 7-11V5l-9-3-9 3v5c0 5 3 9 7 11l2 1Z"/><path d="m8 12 2.5 2.5L16 9"/></svg></span>
-                        <span><strong>Transparence</strong><small>Aucune mauvaise surprise</small></span>
-                    </div>
-                    <div class="trust-item">
-                        <span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
-                        <span><strong>Suivi clair</strong><small>Informé à chaque étape</small></span>
-                    </div>
-                    <div class="trust-item">
-                        <span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 11 2 2 4-4"/><path d="M2 12h5l3 3a2 2 0 0 0 3-3l-2-2"/><path d="m8 9 2-2a3 3 0 0 1 4 0l2 2"/><path d="m2 12 3-5h4"/><path d="m22 12-3 5h-4"/></svg></span>
-                        <span><strong>À vos côtés</strong><small>Une équipe à votre écoute</small></span>
-                    </div>
-                    <div class="trust-item">
-                        <span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 15h3"/></svg></span>
-                        <span><strong>Paiement lisible</strong><small>Factures et reçus détaillés</small></span>
-                    </div>
                 </div>
             </div>
         </section>
 
         {{-- Demande de devis ou de commande en ligne --}}
         <section id="demande" class="mx-auto max-w-4xl scroll-mt-20 px-5 py-16">
-            <div class="section-intro">
-                <p class="services-eyebrow">Parlons de votre projet</p>
-                <h2 class="mt-2 text-3xl font-bold uppercase sm:text-4xl">Demander un devis ou passer commande</h2>
-                <div class="section-title-mark" aria-hidden="true"></div>
-                <p class="mt-3 text-neutral-600">
-                    Indiquez vos coordonnées et les produits souhaités : notre équipe vous recontacte pour confirmer les prix, les disponibilités et la livraison.
-                </p>
-            </div>
+            <h2 class="text-2xl font-bold">Demander un devis ou passer commande</h2>
+            <p class="mt-2 text-neutral-600">
+                Indiquez vos coordonnées et les produits souhaités : notre équipe vous recontacte pour confirmer les prix, les disponibilités et la livraison.
+            </p>
 
             @if (session('request_reference'))
                 <div class="mt-6 rounded-2xl border border-[#A3C108] bg-[#f1f7d6] p-5 text-[#2f3b00]" role="status">
                     <p class="font-semibold">Merci, votre demande est bien enregistrée.</p>
                     <p class="mt-1 text-sm">Référence : <span class="font-mono font-semibold">{{ session('request_reference') }}</span>.
                         Notre équipe vous contactera très prochainement. Gardez cette référence si vous nous appelez.</p>
+                    @php $waConfirm = \App\Support\WhatsApp::link($settings->get('company_whatsapp'), 'Bonjour, je viens d’envoyer la demande '.session('request_reference').' sur votre site. Pouvez-vous me confirmer sa réception ?'); @endphp
+                    @if ($waConfirm)
+                        <a href="{{ $waConfirm }}" target="_blank" rel="noopener"
+                           class="mt-3 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-[#06361b] hover:brightness-95">
+                            Nous écrire sur WhatsApp
+                        </a>
+                    @endif
                 </div>
             @else
                 @if ($errors->any())
@@ -800,7 +272,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('public-requests.store') }}" class="request-panel mt-6 space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200 sm:p-8">
+                <form method="POST" action="{{ route('public-requests.store') }}" class="mt-6 space-y-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
                     @csrf
 
                     {{-- Champ piège pour les robots : laissé vide par les visiteurs --}}
@@ -930,39 +402,6 @@
                         Portes blindées et sécurisées, décoration intérieure des bâtiments, gouttières PVC, vente de lits &amp; bourrés
                         et luminaires de qualité. Service après vente.
                     </p>
-
-                    @if (count($socialLinks))
-                        <div class="mt-6">
-                            <h3 class="text-base">Suivez-nous</h3>
-                            <div class="social-links" aria-label="Réseaux sociaux">
-                                @foreach ($socialLinks as $network => $url)
-                                    <a class="social-link" href="{{ $url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $network }} (nouvel onglet)">
-                                        @switch($network)
-                                            @case('Facebook')
-                                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.5 1.6-1.5h1.7V3.9c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2V10H7.5v3h2.8v8z"/></svg>
-                                                @break
-                                            @case('Instagram')
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none"/></svg>
-                                                @break
-                                            @case('TikTok')
-                                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.6 8.2a7.1 7.1 0 0 1-4.3-1.4v7.1a5.5 5.5 0 1 1-4.8-5.4v3.1a2.5 2.5 0 1 0 1.8 2.4V2.8h3a4.2 4.2 0 0 0 4.3 3.8z"/></svg>
-                                                @break
-                                            @case('YouTube')
-                                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.1a3 3 0 0 0-2.1-2.2C19 4.4 12 4.4 12 4.4s-7 0-8.9.5A3 3 0 0 0 1 7.1a31 31 0 0 0-.5 4.9 31 31 0 0 0 .5 4.9 3 3 0 0 0 2.1 2.2c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.2 31 31 0 0 0 .5-4.9 31 31 0 0 0-.5-4.9zM9.6 15.6V8.4l6.2 3.6z"/></svg>
-                                                @break
-                                            @case('LinkedIn')
-                                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.2 3.5a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6zM3.6 8.5h3.2V20H3.6zM9 8.5h3.1v1.6h.1a3.4 3.4 0 0 1 3.1-1.8c3.3 0 3.9 2.1 3.9 4.8V20H16v-6.1c0-1.5 0-3.3-2-3.3s-2.3 1.6-2.3 3.2V20H9z"/></svg>
-                                                @break
-                                            @case('WhatsApp')
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.5L3 20.5l1.3-4.7A8.5 8.5 0 1 1 20.5 11.7Z"/><path d="M8.2 7.8c.3-.6.6-.6 1-.6h.4c.2 0 .4.1.5.4l.8 1.8c.1.2.1.4-.1.6l-.6.7c-.2.2-.2.4 0 .7.6 1 1.5 1.8 2.5 2.3.2.1.4.1.6-.1l.8-.9c.2-.2.4-.2.7-.1l1.7.8c.3.1.4.3.4.5 0 .3-.2 1.2-.8 1.6-.5.4-1.2.6-2 .4-1-.2-2.2-.7-3.6-1.9-1.2-1-2.1-2.4-2.3-3.4-.3-.9 0-1.8.5-2.8z"/></svg>
-                                                @break
-                                        @endswitch
-                                        <span>{{ $network }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
                 </div>
 
                 <div>
@@ -988,10 +427,7 @@
                 </div>
             </div>
             <div class="border-t border-white/10">
-                <div class="footer-bottom mx-auto max-w-6xl px-5 py-5">
-                    <p class="text-xs text-neutral-400">© {{ date('Y') }} {{ $company }}. Tous droits réservés.</p>
-                    <a href="#landing" class="text-xs font-medium text-neutral-300 hover:text-[#A3C108]">Retour en haut ↑</a>
-                </div>
+                <p class="mx-auto max-w-6xl px-5 py-5 text-xs text-neutral-400">© {{ date('Y') }} {{ $company }}. Tous droits réservés.</p>
             </div>
         </footer>
     </div>
@@ -1018,7 +454,6 @@
     const panel = document.getElementById('login-panel');
     const homeUrl = @json(route('home', [], false));
     const loginUrl = @json(route('login', [], false));
-    let openedAt = Date.now();
 
     // ---------- Volet de connexion ----------
     function sync() {
@@ -1030,7 +465,6 @@
 
     function setOpen(open, push) {
         body.classList.toggle('login-open', open);
-        if (open) openedAt = Date.now();
         sync();
         if (push) history.pushState({ login: open }, '', open ? loginUrl : homeUrl);
         if (open) setTimeout(() => document.getElementById('email')?.focus({ preventScroll: true }), 380);
@@ -1046,11 +480,10 @@
         if (e.key === 'Escape' && body.classList.contains('login-open')) setOpen(false, true);
     });
 
-    // Double-clic en dehors du volet : on le ferme
-    document.addEventListener('dblclick', (e) => {
+    // Double-clic sur une zone libre de l'accueil : ferme le volet de connexion
+    document.getElementById('landing')?.addEventListener('dblclick', (e) => {
         if (!body.classList.contains('login-open')) return;
-        if (e.target.closest('#login-panel')) return; // pas de fermeture en double-cliquant dans le formulaire
-        if (Date.now() - openedAt < 600) return;      // évite la fermeture immédiate après un double-clic sur « Connexion »
+        if (e.target.closest('a, button, input, select, textarea, label, form, #login-panel')) return;
         setOpen(false, true);
     });
 
@@ -1138,12 +571,18 @@
     if (!initial.length) addRow({});
 })();
 </script>
+    @if ($waBase)
+        <a class="wa-float" href="{{ $waBase }}?text={{ rawurlencode('Bonjour '.$company.', je souhaite un devis.') }}" target="_blank" rel="noopener" aria-label="Écrire sur WhatsApp">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a3.5 3.5 0 0 1-1.6-1.6l.8-1-1-2z"/></svg>
+            <span>WhatsApp</span>
+        </a>
+    @endif
 <script>
 (function () {
     var d = document.documentElement;
     if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }
     d.classList.add('js');
-    var els = document.querySelectorAll('#produits h2, #produits p, #produits .gamme, #services h2, #services .step, #demande > *, #contact > *, .site-footer .grid > div');
+    var els = document.querySelectorAll('#produits h2, #produits p, #produits .gamme, #services h2, #services .cards > div, #demande > *, #contact > *, .site-footer .grid > div');
     var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
     }, { threshold: 0.12 });

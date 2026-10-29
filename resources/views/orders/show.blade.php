@@ -20,7 +20,7 @@
             @foreach ($order->status->manualTransitions() as $target)
                 @can('transition', [$order, $target])
                     <form method="POST" action="{{ route('orders.transition', $order) }}"
-                          onsubmit="return confirm('{{ $target->actionLabel() }} ?')">
+                          data-confirm="{{ $target->actionLabel() }} ?">
                         @csrf
                         <input type="hidden" name="status" value="{{ $target->value }}">
                         <button class="rounded-lg px-4 py-2 text-sm text-ink {{ $target === \App\Enums\OrderStatus::Cancelled ? 'bg-red-600 hover:bg-red-700' : 'bg-soft hover:bg-soft-hover' }}">

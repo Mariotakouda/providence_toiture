@@ -26,8 +26,10 @@ class RoleController extends Controller
         ]);
     }
 
-    public function edit(Role $role): View
+    public function edit(Request $request, Role $role): View
     {
+        abort_unless($request->user()->hasRole('admin'), 403, 'Réservé aux administrateurs.');
+
         $existing = Permission::orderBy('name')->pluck('name')->all();
 
         return view('roles.edit', [
@@ -42,6 +44,8 @@ class RoleController extends Controller
 
     public function update(Request $request, Role $role): RedirectResponse
     {
+        abort_unless($request->user()->hasRole('admin'), 403, 'Réservé aux administrateurs.');
+
         // L'administrateur garde toutes les permissions : évite de se verrouiller dehors.
         abort_if($role->name === 'admin', 403, 'Le rôle administrateur n’est pas modifiable.');
 

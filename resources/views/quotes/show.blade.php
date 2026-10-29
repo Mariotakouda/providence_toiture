@@ -18,7 +18,7 @@
 @else
     @can('convert', $quote)
         <form method="POST" action="{{ route('quotes.convert', $quote) }}"
-              onsubmit="return confirm('Convertir ce devis en commande ?')">
+              data-confirm="Convertir ce devis en commande ?">
             @csrf
             <button class="rounded-lg bg-brand px-4 py-2 text-sm text-on-brand hover:bg-brand-hover">Convertir en commande</button>
         </form>
@@ -47,7 +47,7 @@
             @foreach ($quote->status->allowedTransitions() as $target)
                 @can('transition', [$quote, $target])
                     <form method="POST" action="{{ route('quotes.transition', $quote) }}"
-                          onsubmit="return confirm('{{ $target->actionLabel() }} ?')">
+                          data-confirm="{{ $target->actionLabel() }} ?">
                         @csrf
                         <input type="hidden" name="status" value="{{ $target->value }}">
                         <button class="rounded-lg px-4 py-2 text-sm text-on-brand

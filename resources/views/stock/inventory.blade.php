@@ -73,7 +73,7 @@
 
         <div class="mt-4 flex gap-3">
             <button type="submit"
-                    onclick="return confirm('Appliquer cet inventaire ? Un ajustement sera créé pour chaque écart.')"
+                    data-confirm="Appliquer cet inventaire ? Un ajustement sera créé pour chaque écart."
                     class="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-on-brand hover:bg-brand-hover">
                 Appliquer l’inventaire
             </button>

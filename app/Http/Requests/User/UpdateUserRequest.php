@@ -22,8 +22,12 @@ class UpdateUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'phone' => ['nullable', 'string', 'max:30'],
-            'role' => ['required', Rule::enum(RoleName::class)],
-            'password' => ['nullable', 'confirmed', Password::min(8)->letters()->numbers()],
+            'role' => ['required', Rule::enum(RoleName::class), function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($value === RoleName::Admin->value && ! $this->user()?->hasRole(RoleName::Admin->value)) {
+                    $fail('Seul un administrateur peut attribuer le rôle administrateur.');
+                }
+            }],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
             'is_active' => ['required', 'boolean'],
         ];
     }

@@ -44,7 +44,7 @@
         <input id="password" name="password" type="password" {{ $isEdit ? '' : 'required' }}
                class="mt-1 w-full rounded-lg border border-line px-3 py-2">
         @error('password') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-        <p class="mt-1 text-xs text-muted">8 caractères minimum, avec lettres et chiffres.</p>
+        <p class="mt-1 text-xs text-muted">12 caractères minimum, avec lettres et chiffres.</p>
     </div>
 
     <div>

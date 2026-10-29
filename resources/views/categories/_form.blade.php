@@ -40,7 +40,7 @@
         <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;">
         @error('image') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <script>
+        <script nonce="{{ Vite::cspNonce() }}">
             // Réduit automatiquement la photo (1600 px max, JPEG) avant l'envoi : évite les erreurs de taille.
             document.getElementById('image').addEventListener('change', async function () {
                 var input = this, f = input.files[0], img = document.getElementById('image-preview');

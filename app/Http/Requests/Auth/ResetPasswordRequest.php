@@ -17,7 +17,7 @@ class ResetPasswordRequest extends FormRequest
         return [
             'token' => ['required', 'string'],
             'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+            'password' => ['required', 'confirmed', Password::defaults()],
         ];
     }
 
@@ -25,7 +25,7 @@ class ResetPasswordRequest extends FormRequest
     {
         return [
             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
-            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caractères.',
         ];
     }
 }

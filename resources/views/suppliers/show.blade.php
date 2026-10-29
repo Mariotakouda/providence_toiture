@@ -11,7 +11,7 @@
                 <a href="{{ route('suppliers.edit', $supplier) }}"
                    class="rounded-lg border border-line bg-white px-4 py-2 text-sm hover:bg-page">Modifier</a>
                 <form method="POST" action="{{ route('suppliers.toggle-status', $supplier) }}"
-                      onsubmit="return confirm('{{ $supplier->is_active ? 'Désactiver' : 'Activer' }} ce fournisseur ?')">
+                      data-confirm="{{ $supplier->is_active ? 'Désactiver' : 'Activer' }} ce fournisseur ?">
                     @csrf
                     @method('PATCH')
                     <button class="rounded-lg px-4 py-2 text-sm text-on-brand {{ $supplier->is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-brand hover:bg-brand-hover' }}">

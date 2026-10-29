@@ -123,12 +123,12 @@
        class="rounded-lg border border-line px-4 py-2 text-sm hover:bg-page">Annuler</a>
 </div>
 
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
 (function () {
-    const catalog = @json($catalog);
+    const catalog = {{ Js::from($catalog) }};
     const taxRate = {{ (float) $taxRate }};
-    const canOverride = @json($canOverride);
-    const initial = @json($initialLines);
+    const canOverride = {{ Js::from($canOverride) }};
+    const initial = {{ Js::from($initialLines) }};
 
     const body = document.getElementById('lines-body');
     const feeInput = document.getElementById('delivery_fee');

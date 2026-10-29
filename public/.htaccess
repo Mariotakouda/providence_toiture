@@ -1,9 +1,18 @@
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header unset X-Powered-By
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+
+    # Sécurité : fichiers cachés (.env, .git…) et fichiers techniques/sauvegardes inaccessibles
+    RewriteRule (^|/)\.(?!well-known/) - [F,L]
+    RewriteRule \.(env|sql|log|bak|old|orig|swp|zip|lock|md|dist)$ - [F,L]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

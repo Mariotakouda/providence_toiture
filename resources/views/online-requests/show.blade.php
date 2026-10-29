@@ -103,7 +103,7 @@
 
                     @can('quotes.create')
                         <form method="POST" action="{{ route('online-requests.convert', $onlineRequest) }}"
-                              onsubmit="return confirm('Créer un devis brouillon depuis cette demande ?')" class="space-y-3 text-sm">
+                              data-confirm="Créer un devis brouillon depuis cette demande ?" class="space-y-3 text-sm">
                             @csrf
 
                             @if ($candidates->isNotEmpty())
@@ -150,7 +150,7 @@
                     @endif
 
                     <form method="POST" action="{{ route('online-requests.close', $onlineRequest) }}"
-                          onsubmit="return confirm('Clôturer cette demande ?')" class="space-y-3 text-sm">
+                          data-confirm="Clôturer cette demande ?" class="space-y-3 text-sm">
                         @csrf
                         <label for="reason" class="block font-medium">Clôturer sans devis (motif obligatoire)</label>
                         <textarea id="reason" name="reason" rows="3" required minlength="3" maxlength="255"

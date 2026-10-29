@@ -24,9 +24,11 @@
                         <td class="px-4 py-3 text-right">{{ $role->users_count }}</td>
                         <td class="px-4 py-3 text-right">{{ $role->permissions_count }} / {{ $total }}</td>
                         <td class="px-4 py-3 text-right">
-                            <a href="{{ route('roles.edit', $role) }}" class="text-link hover:underline">
-                                {{ $role->name === 'admin' ? 'Voir' : 'Modifier' }}
-                            </a>
+                            @role('admin')
+                                <a href="{{ route('roles.edit', $role) }}" class="text-link hover:underline">
+                                    {{ $role->name === 'admin' ? 'Voir' : 'Modifier' }}
+                                </a>
+                            @endrole
                         </td>
                     </tr>
                 @endforeach

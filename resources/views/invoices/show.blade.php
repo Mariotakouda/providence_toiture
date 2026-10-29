@@ -22,7 +22,7 @@
 
             @can('transition', [$invoice, \App\Enums\InvoiceStatus::Issued])
                 <form method="POST" action="{{ route('invoices.transition', $invoice) }}"
-                      onsubmit="return confirm('Émettre cette facture ? Elle ne sera plus modifiable.')">
+                      data-confirm="Émettre cette facture ? Elle ne sera plus modifiable.">
                     @csrf
                     <input type="hidden" name="status" value="issued">
                     <button class="rounded-lg bg-brand px-4 py-2 text-sm text-on-brand hover:bg-brand-hover">Émettre la facture</button>
@@ -31,7 +31,7 @@
 
             @can('transition', [$invoice, \App\Enums\InvoiceStatus::Cancelled])
                 <form method="POST" action="{{ route('invoices.transition', $invoice) }}"
-                      onsubmit="return confirm('Annuler cette facture ?')" class="flex items-start gap-2">
+                      data-confirm="Annuler cette facture ?" class="flex items-start gap-2">
                     @csrf
                     <input type="hidden" name="status" value="cancelled">
                     <input type="text" name="reason" placeholder="Motif d’annulation" required minlength="3" maxlength="255" class="{{ $input }}">
@@ -179,7 +179,7 @@
                                     <a href="{{ route('payments.receipt', $payment) }}" target="_blank" class="text-link hover:underline">Reçu</a>
                                     @can('cancel', $payment)
                                         <form method="POST" action="{{ route('payments.cancel', $payment) }}"
-                                              onsubmit="return confirm('Annuler ce paiement ?')" class="flex gap-1">
+                                              data-confirm="Annuler ce paiement ?" class="flex gap-1">
                                             @csrf
                                             <input type="text" name="reason" placeholder="Motif" required minlength="3" maxlength="255" class="w-32 rounded border border-line px-2 py-1 text-xs">
                                             <button class="text-red-600 hover:underline">Annuler</button>

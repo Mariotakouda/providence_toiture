@@ -24,7 +24,7 @@
             @error('password')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
-            <p class="mt-1 text-xs text-muted">8 caractères minimum, avec lettres et chiffres.</p>
+            <p class="mt-1 text-xs text-muted">12 caractères minimum, avec lettres et chiffres.</p>
         </div>
 
         <div>

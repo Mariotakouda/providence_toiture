@@ -6,7 +6,7 @@
     <title>@hasSection('title')@yield('title') - @endif{{ config('app.name') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
+    <style nonce="{{ Vite::cspNonce() }}">
         .nav-panel { display: grid; grid-template-rows: 0fr; }
         .nav-group[data-open="true"] > .nav-panel { grid-template-rows: 1fr; }
         .nav-panel > div { min-height: 0; overflow: hidden; }
@@ -182,7 +182,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
 (function () {
     // Mode accordéon : un seul groupe ouvert à la fois, mémorisé d'une page à l'autre.
     const KEY = 'pm.nav.current';
@@ -247,7 +247,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDrawer(false); });
 })();
 </script>
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
 (function () {
     // Smartphone : donne à chaque cellule le libellé de sa colonne (affiché en carte, voir app.css).
     var main = document.querySelector('main');

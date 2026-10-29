@@ -41,7 +41,7 @@
     <meta name="description" content="{{ $company }} : tôles, bac acier, étanchéité et portes de sécurité. Demandez votre devis en ligne.">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
+    <style nonce="{{ Vite::cspNonce() }}">
         .btn-brand { background: #A3C108; color: #181818; font-weight: 600; transition: background-color .15s ease; }
         .btn-brand:hover { background: #8DA906; }
         .btn-brand:focus-visible { outline: 2px solid #181818; outline-offset: 2px; }
@@ -448,12 +448,12 @@
     </aside>
 </div>
 
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
 (function () {
     const body = document.body;
     const panel = document.getElementById('login-panel');
-    const homeUrl = @json(route('home', [], false));
-    const loginUrl = @json(route('login', [], false));
+    const homeUrl = {{ Js::from(route('home', [], false)) }};
+    const loginUrl = {{ Js::from(route('login', [], false)) }};
 
     // ---------- Volet de connexion ----------
     function sync() {
@@ -499,8 +499,8 @@
     if (sync()) setTimeout(() => document.getElementById('email')?.focus({ preventScroll: true }), 50);
 
     // ---------- Lignes de produits de la demande ----------
-    const catalog = @json($catalogData);
-    const initial = @json($initialItems);
+    const catalog = {{ Js::from($catalogData) }};
+    const initial = {{ Js::from($initialItems) }};
     const itemsBox = document.getElementById('items');
     const emptyHint = document.getElementById('items-empty');
     const addBtn = document.getElementById('add-item');
@@ -577,7 +577,7 @@
             <span>WhatsApp</span>
         </a>
     @endif
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
 (function () {
     var d = document.documentElement;
     if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { return; }

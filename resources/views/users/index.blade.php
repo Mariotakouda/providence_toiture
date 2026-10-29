@@ -68,7 +68,7 @@
 
                                 @if (! $user->is(auth()->user()))
                                     <form method="POST" action="{{ route('users.toggle-status', $user) }}"
-                                          onsubmit="return confirm('{{ $user->is_active ? 'Désactiver' : 'Activer' }} ce compte ?')">
+                                          data-confirm="{{ $user->is_active ? 'Désactiver' : 'Activer' }} ce compte ?">
                                         @csrf
                                         @method('PATCH')
                                         <button class="{{ $user->is_active ? 'text-red-600' : 'text-green-600' }} hover:underline">

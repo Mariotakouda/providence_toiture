@@ -9,6 +9,12 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            $this->command?->warn('UserSeeder ignoré en production (comptes de démonstration). Utilisez : php artisan app:create-admin');
+
+            return;
+        }
+
         $users = [
             'admin' => 'Administrateur',
             'direction' => 'Direction',

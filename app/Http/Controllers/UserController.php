@@ -74,8 +74,10 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Utilisateur créé.');
     }
 
-    public function edit(User $user): View
+    public function edit(Request $request, User $user): View
     {
+        $this->denyIfAdminTarget($request, $user);
+
         return view('users.edit', [
             'user' => $user,
             'roles' => Role::orderBy('id')->pluck('name'),
@@ -85,6 +87,8 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        $this->denyIfAdminTarget($request, $user);
+
         $data = $request->validated();
         $newRole = $data['role'];
         $isActive = $request->boolean('is_active');
@@ -136,6 +140,9 @@ class UserController extends Controller
 
         if (! $isActive) {
             $this->purgeSessions($user);
+        } elseif ($passwordChanged) {
+            // Les autres appareils/sessions de ce compte doivent se reconnecter.
+            $this->purgeSessions($user, $request->user()->is($user) ? $request->session()->getId() : null);
         }
 
         return redirect()->route('users.index')->with('success', 'Utilisateur mis à jour.');
@@ -143,6 +150,8 @@ class UserController extends Controller
 
     public function toggleStatus(Request $request, User $user): RedirectResponse
     {
+        $this->denyIfAdminTarget($request, $user);
+
         if ($user->is($request->user())) {
             return back()->with('error', 'Vous ne pouvez pas désactiver votre propre compte.');
         }
@@ -186,10 +195,23 @@ class UserController extends Controller
             ->doesntExist();
     }
 
-    private function purgeSessions(User $user): void
+    private function purgeSessions(User $user, ?string $exceptSessionId = null): void
     {
         if (config('session.driver') === 'database') {
-            DB::table('sessions')->where('user_id', $user->id)->delete();
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->when($exceptSessionId, fn ($query) => $query->where('id', '!=', $exceptSessionId))
+                ->delete();
         }
+    }
+
+    /** Seul un administrateur peut consulter, modifier ou (dés)activer un compte administrateur. */
+    private function denyIfAdminTarget(Request $request, User $user): void
+    {
+        abort_if(
+            $user->hasRole('admin') && ! $request->user()->hasRole('admin'),
+            403,
+            'Seul un administrateur peut gérer un compte administrateur.'
+        );
     }
 }

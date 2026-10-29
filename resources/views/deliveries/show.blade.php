@@ -89,7 +89,7 @@
 
             @can('transition', [$delivery, \App\Enums\DeliveryStatus::Delivered])
                 <form method="POST" action="{{ route('deliveries.transition', $delivery) }}"
-                      onsubmit="return confirm('Confirmer la livraison ? Le stock sera déduit.')"
+                      data-confirm="Confirmer la livraison ? Le stock sera déduit."
                       class="rounded-xl bg-white p-4 shadow">
                     @csrf
                     <input type="hidden" name="status" value="delivered">
@@ -114,7 +114,7 @@
 
             @can('transition', [$delivery, \App\Enums\DeliveryStatus::Cancelled])
                 <form method="POST" action="{{ route('deliveries.transition', $delivery) }}"
-                      onsubmit="return confirm('Annuler ce bon de livraison ?')">
+                      data-confirm="Annuler ce bon de livraison ?">
                     @csrf
                     <input type="hidden" name="status" value="cancelled">
                     <button class="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700">Annuler le bon</button>

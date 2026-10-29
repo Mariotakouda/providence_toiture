@@ -55,7 +55,7 @@
                                 <div class="flex flex-wrap justify-end gap-x-3 gap-y-1">
                                     <a href="{{ route('categories.edit', $category) }}" class="text-link hover:underline">Modifier</a>
                                     <form method="POST" action="{{ route('categories.toggle-status', $category) }}"
-                                          onsubmit="return confirm('{{ $category->is_active ? 'Désactiver' : 'Activer' }} cette catégorie ?')">
+                                          data-confirm="{{ $category->is_active ? 'Désactiver' : 'Activer' }} cette catégorie ?">
                                         @csrf
                                         @method('PATCH')
                                         <button class="{{ $category->is_active ? 'text-red-600' : 'text-green-600' }} hover:underline">

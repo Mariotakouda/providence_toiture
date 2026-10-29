@@ -58,6 +58,15 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'secure' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/errors.log'),
+            'level' => 'error',
+            'days' => 30,
+            'permission' => 0640,
+            'replace_placeholders' => true,
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

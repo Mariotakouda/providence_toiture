@@ -13,7 +13,7 @@
             @endcan
             @can('archive', $product)
                 <form method="POST" action="{{ route('products.toggle-status', $product) }}"
-                      onsubmit="return confirm('{{ $product->is_active ? 'Archiver' : 'Réactiver' }} ce produit ?')">
+                      data-confirm="{{ $product->is_active ? 'Archiver' : 'Réactiver' }} ce produit ?">
                     @csrf
                     @method('PATCH')
                     <button class="rounded-lg px-4 py-2 text-sm text-on-brand {{ $product->is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-brand hover:bg-brand-hover' }}">
@@ -105,7 +105,7 @@
                                     <div class="flex flex-wrap justify-end gap-x-3 gap-y-1">
                                         <a href="{{ route('products.variants.edit', [$product, $variant]) }}" class="text-link hover:underline">Modifier</a>
                                         <form method="POST" action="{{ route('products.variants.toggle-status', [$product, $variant]) }}"
-                                              onsubmit="return confirm('{{ $variant->is_active ? 'Désactiver' : 'Activer' }} cette variante ?')">
+                                              data-confirm="{{ $variant->is_active ? 'Désactiver' : 'Activer' }} cette variante ?">
                                             @csrf
                                             @method('PATCH')
                                             <button class="{{ $variant->is_active ? 'text-red-600' : 'text-green-600' }} hover:underline">

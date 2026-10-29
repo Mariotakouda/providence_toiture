@@ -11,7 +11,7 @@
                 <a href="{{ route('customers.edit', $customer) }}"
                    class="rounded-lg border border-line bg-white px-4 py-2 text-sm hover:bg-page">Modifier</a>
                 <form method="POST" action="{{ route('customers.toggle-status', $customer) }}"
-                      onsubmit="return confirm('{{ $customer->is_active ? 'Désactiver' : 'Activer' }} ce client ?')">
+                      data-confirm="{{ $customer->is_active ? 'Désactiver' : 'Activer' }} ce client ?">
                     @csrf
                     @method('PATCH')
                     <button class="rounded-lg px-4 py-2 text-sm text-on-brand {{ $customer->is_active ? 'bg-red-600 hover:bg-red-700' : 'bg-brand hover:bg-brand-hover' }}">

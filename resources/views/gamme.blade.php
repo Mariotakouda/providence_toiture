@@ -13,7 +13,7 @@
     <meta name="description" content="{{ $company }} : tôles, bac acier, étanchéité et portes de sécurité. Demandez votre devis en ligne.">
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>
+    <style nonce="{{ Vite::cspNonce() }}">
         body { font-family: 'Barlow', 'Segoe UI', Arial, sans-serif; }
         h1, h2, h3, .display { font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif; }
         .g-hero { position: relative; isolation: isolate; overflow: hidden; background: #181818; color: #fff; }

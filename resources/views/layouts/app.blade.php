@@ -176,6 +176,7 @@
         <main class="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8">
             <div class="mx-auto w-full max-w-[100rem]">
                 @include('partials.flash')
+                @include('partials.form-errors')
                 @yield('content')
             </div>
         </main>
@@ -277,5 +278,6 @@
     }).observe(main, { childList: true, subtree: true });
 })();
 </script>
+@include('partials.form-validation')
 </body>
 </html>

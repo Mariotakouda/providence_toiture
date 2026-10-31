@@ -24,7 +24,7 @@
             return 'Ce champ est obligatoire.';
         }
         if (v.typeMismatch) {
-            if (t === 'email') return 'Saisissez une adresse e-mail valide, par exemple nom@@exemple.com.';
+            if (t === 'email') return 'Saisissez une adresse e-mail valide, par exemple nom\u0040exemple.com.';
             if (t === 'url') return 'Saisissez une adresse web valide (commençant par https://).';
             return 'Le format de cette valeur n’est pas valide.';
         }
@@ -117,7 +117,7 @@
         });
     });
 
-    // Messages déjà affichés par les pages (@error) : on les met en rouge sur le champ,
+    // Messages déjà affichés par les pages (messages d’erreur du serveur) : on les met en rouge sur le champ,
     // et ils disparaissent quand la valeur est corrigée.
     document.querySelectorAll('p.text-red-600').forEach(function (p) {
         var prev = p.previousElementSibling;
